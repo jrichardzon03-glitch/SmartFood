@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>SmartFood - Restaurante Inteligente</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #1a0033, #0f0047, #001f54, #320d6d);
+      color: #fff;
+      text-align: center;
+      padding: 20px;
+      min-height: 100vh;
+    }
+    h1 {
+      color: #9d4edd;
+      text-shadow: 0 0 15px #4cc9f0;
+    }
+    h2 {
+      margin-top: 20px;
+      color: #f1f1f1;
+    }
+    h3 {
+      color: #4cc9f0;
+      font-weight: normal;
+    }
+    .opcion {
+      background: linear-gradient(135deg, rgba(157, 78, 221, 0.6), rgba(76, 201, 240, 0.3));
+      border: 2px solid #4cc9f0;
+      border-radius: 15px;
+      margin: 12px auto;
+      padding: 15px;
+      width: 70%;
+      cursor: pointer;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .opcion:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 15px #9d4edd;
+    }
+    .btn {
+      background: linear-gradient(135deg, #4cc9f0, #9d4edd);
+      color: white;
+      padding: 10px 25px;
+      margin: 15px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 12px #4cc9f0;
+    }
+    #resumen {
+      background: rgba(255,255,255,0.08);
+      padding: 20px;
+      border-radius: 15px;
+      margin-top: 30px;
+      display: none;
+      text-align: left;
+    }
+    #detalle {
+      margin: 15px 0;
+      line-height: 1.6;
+    }
+    #barra {
+      width: 0;
+      height: 20px;
+      background: linear-gradient(90deg, #4cc9f0, #9d4edd);
+      border-radius: 10px;
+      margin-top: 10px;
+      transition: width 0.3s;
+    }
+    #contenedorBarra {
+      width: 100%;
+      background: rgba(255,255,255,0.2);
+      border-radius: 10px;
+      margin-top: 20px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>🍽️ Bienvenido a SmartFood 🍽️</h1>
+  <h3>Restaurante Inteligente</h3>
+
+  <div id="app"></div>
+
+  <div id="resumen">
+    <h2>📋 Resumen de Pedido</h2>
+    <div id="detalle"></div>
+    <h3 id="total"></h3>
+    <div id="contenedorBarra">
+      <div id="barra"></div>
+    </div>
+  </div>
+
+  <script>
+    const app = document.getElementById("app");
+    let pedido = {
+      nombre: "",
+      items: [],
+      total: 0,
+      descuento: 0,
+      numero: Math.floor(Math.random() * 40) + 10
+    };
+
+    function preguntarNombre() {
+      app.innerHTML = `
+        <h2>¿Cuál es tu nombre?</h2>
+        <input type="text" id="nombre" placeholder="Escribe tu nombre">
+        <br><br>
+        <button class="btn" onclick="guardarNombre()">Continuar</button>
+      `;
+    }
+
+    function guardarNombre() {
+      let n = document.getElementById("nombre").value;
+      if(n.trim()===""){alert("Por favor escribe tu nombre");return;}
+      pedido.nombre = n;
+      preguntarCombo();
+    }
+
+    function preguntarCombo() {
+      app.innerHTML = "<h2>¿Deseas un combo?</h2>";
+      let combos = [
+        {n:"Combo 1 - Ají Lovers: Ají de Gallina+Chicha Morada+Mazamorra Morada", p:21},
+        {n:"Combo 2 - Cevichero: Ceviche Clásico de Pescado+Yuca frita+Refresco de Maracuyá", p:28},
+        {n:"Combo 3 - Brasa: 1/4 Pollo a la Brasa+Papas fritas+Gaseosa 500ml", p:20},
+        {n:"Combo 4 - Anticuchero Criollo: Anticuchos de Corazón(2)+Papa dorada+Chicha Morada", p:16},
+        {n:"Combo 5 - Seco Tradicional: Seco de Res con frijoles+Limonada frozen+Arroz con Leche", p:24}
+      ];
+      combos.forEach(c=>{
+        app.innerHTML += `<div class="opcion" onclick="pedirCantidad('${c.n}',${c.p},preguntarEntrada)">${c.n} - S/${c.p}</div>`;
+      });
+      app.innerHTML += `<button class="btn" onclick="preguntarEntrada()">No deseo Combo</button>`;
+    }
+
+    function pedirCantidad(nombre, precio, siguientePaso) {
+      app.innerHTML = `
+        <h2>${nombre}</h2>
+        <p>Precio: S/${precio}</p>
+        <label>Cantidad: </label>
+        <input type="number" id="cantidad" value="1" min="1" style="width:60px">
+        <br><br>
+        <button class="btn" onclick="guardarItem('${nombre}',${precio},'cantidad',${siguientePaso.name})">Confirmar</button>
+      `;
+    }
+
+    function guardarItem(nombre, precio, idCantidad, siguientePaso) {
+      let cant = parseInt(document.getElementById(idCantidad).value);
+      if(isNaN(cant) || cant<=0){alert("Cantidad no válida");return;}
+      pedido.items.push({nombre, precio, cantidad:cant});
+      pedido.total += precio*cant;
+      siguientePaso();
+    }
+
+    function preguntarEntrada(){
+      app.innerHTML="<h2>¿Deseas una entrada?</h2>";
+      let entradas=[
+        {n:"Anticuchos con Papa y Ají",p:18},
+        {n:"Causa de Atún",p:14},
+        {n:"Causa Limeña de Pollo",p:14},
+        {n:"Humita de Maíz",p:9},
+        {n:"Ocopa Arequipeña",p:12},
+        {n:"Papa a la Huancaína",p:12},
+        {n:"Tamal Criollo",p:10},
+        {n:"Caldo de Gallina",p:10},
+        {n:"Aguadito de Pollo",p:10}
+      ];
+      entradas.forEach(e=>{
+        app.innerHTML+=`<div class="opcion" onclick="pedirCantidad('${e.n}',${e.p},preguntarPlatoCriollo)">${e.n} - S/${e.p}</div>`;
+      });
+      app.innerHTML+=`<button class="btn" onclick="preguntarPlatoCriollo()">No deseo Entrada</button>`;
+    }
+
+    function preguntarPlatoCriollo(){
+      app.innerHTML="<h2>¿Deseas un plato criollo?</h2>";
+      let criollos=[
+        {n:"Lomo Saltado",p:22},
+        {n:"Ají de Gallina",p:18},
+        {n:"Arroz con Pollo",p:16},
+        {n:"Seco de Cabrito con Frejoles",p:26},
+        {n:"Tallarines Verdes con Bistec",p:18},
+        {n:"Tallarines a la Huancaína con Lomo",p:20},
+        {n:"Carapulcra con Sopa Seca",p:22},
+        {n:"Arroz con Pato a la Norteña",p:28},
+        {n:"Chicharrón de Cerdo con Mote y Camote",p:20},
+        {n:"Cau Cau Criollo",p:16}
+      ];
+      criollos.forEach(pl=>{
+        app.innerHTML+=`<div class="opcion" onclick="pedirCantidad('${pl.n}',${pl.p},preguntarPlatoMarino)">${pl.n} - S/${pl.p}</div>`;
+      });
+      app.innerHTML+=`<button class="btn" onclick="preguntarPlatoMarino()">No deseo Criollo</button>`;
+    }
+
+    function preguntarPlatoMarino(){
+      app.innerHTML="<h2>¿Deseas un plato marino?</h2>";
+      let marinos=[
+        {n:"Arroz con Mariscos",p:24},
+        {n:"Ceviche Clásico de Pescado",p:24},
+        {n:"Ceviche Mixto",p:28},
+        {n:"Chicharrón de Pescado",p:20},
+        {n:"Jalea de Pescado y Mariscos",p:26}
+      ];
+      marinos.forEach(m=>{
+        app.innerHTML+=`<div class="opcion" onclick="pedirCantidad('${m.n}',${m.p},preguntarPostre)">${m.n} - S/${m.p}</div>`;
+      });
+      app.innerHTML+=`<button class="btn" onclick="preguntarPostre()">No deseo Marino</button>`;
+    }
+
+    function preguntarPostre(){
+      app.innerHTML="<h2>¿Deseas un postre?</h2>";
+      let postres=[
+        {n:"Mazamorra Morada",p:8},
+        {n:"Arroz con Leche",p:8},
+        {n:"Suspiro a la Limeña",p:12},
+        {n:"Picarones",p:10},
+        {n:"Turrón de Doña Pepa",p:12}
+      ];
+      postres.forEach(po=>{
+        app.innerHTML+=`<div class="opcion" onclick="pedirCantidad('${po.n}',${po.p},preguntarBebida)">${po.n} - S/${po.p}</div>`;
+      });
+      app.innerHTML+=`<button class="btn" onclick="preguntarBebida()">No deseo Postre</button>`;
+    }
+
+    function preguntarBebida(){
+      app.innerHTML="<h2>¿Deseas una bebida?</h2>";
+      let bebidas=[
+        {n:"Refresco de maracuyá",p:6},
+        {n:"Limonada frozen",p:7},
+        {n:"Refresco de carambola",p:6},
+        {n:"Chicha morada",p:6},
+        {n:"Agua mineral",p:4}
+      ];
+      bebidas.forEach(b=>{
+        app.innerHTML+=`<div class="opcion" onclick="pedirCantidad('${b.n}',${b.p},mostrarResumen)">${b.n} - S/${b.p}</div>`;
+      });
+      app.innerHTML+=`<button class="btn" onclick="mostrarResumen()">No deseo Bebida</button>`;
+    }
+
+    function mostrarResumen(){
+      // descuento ejemplo
+      let suspiro = pedido.items.find(i=>i.nombre=="Suspiro a la Limeña");
+      let limonada = pedido.items.find(i=>i.nombre=="Limonada frozen");
+      if(suspiro && limonada){
+        pedido.descuento = pedido.total*0.2;
+        pedido.total -= pedido.descuento;
+      }
+
+      document.getElementById("resumen").style.display="block";
+      app.innerHTML="";
+      let d=`<b>Cliente:</b> ${pedido.nombre}<br>
+      <b>Pedido #</b>${pedido.numero}<br><br>`;
+      pedido.items.forEach(it=>{
+        d+=`- ${it.nombre} x${it.cantidad} = S/${(it.precio*it.cantidad).toFixed(2)}<br>`;
+      });
+      if(pedido.descuento>0) d+=`<br><b>Descuento aplicado:</b> S/${pedido.descuento.toFixed(2)}<br>`;
+      document.getElementById("detalle").innerHTML=d;
+      document.getElementById("total").innerText="Total a pagar: S/"+pedido.total.toFixed(2);
+
+      // Barra de carga
+      document.getElementById("contenedorBarra").style.display="block";
+      let barra=document.getElementById("barra");
+      let w=0;
+      let carga=setInterval(()=>{
+        if(w>=100){
+          clearInterval(carga);
+          document.getElementById("total").innerHTML+="<br>🍴 Tu pedido está listo!";
+        }else{
+          w+=5;
+          barra.style.width=w+"%";
+        }
+      },300);
+    }
+
+    preguntarNombre();
+  </script>
+</body>
+</html>
